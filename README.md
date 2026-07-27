@@ -16,9 +16,17 @@ Static storefront with Python serverless API routes for Firebase/Firestore data.
 Set these Vercel environment variables before deploying:
 
 ```bash
+FIREBASE_DATABASE_URL=https://your-project-default-rtdb.firebaseio.com
 FIREBASE_PROJECT_ID=your-project-id
-FIREBASE_API_KEY=your-firebase-web-api-key
+FIREBASE_API_KEY=your-web-api-key
+FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+FIREBASE_STORAGE_BUCKET=your-project.firebasestorage.app
+FIREBASE_MESSAGING_SENDER_ID=sender-id
+FIREBASE_APP_ID=app-id
+FIREBASE_MEASUREMENT_ID=measurement-id
 ```
+
+The frontend loads Firebase config from `/api/firebase-config`, so the config is not hardcoded in `js/app.js`. Data sync uses the Firebase Web SDK, matching the original working flow.
 
 API routes:
 
