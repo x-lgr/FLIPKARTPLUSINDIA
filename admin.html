@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#2874f0">
+  <title>Admin Panel</title>
+  <style>
+    :root { --blue:#2874f0; --yellow:#ffe500; --bg:#f1f3f6; --text:#212121; --muted:#666; --danger:#dc3545; --green:#388e3c; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: var(--bg); color: var(--text); padding-bottom: 40px; }
+    .card { background:#fff; border-radius:8px; padding:16px; margin:12px; box-shadow:0 1px 6px rgba(0,0,0,.08); }
+    h2 { color:var(--blue); font-size:17px; margin-bottom:12px; }
+    h3 { font-size:14px; margin:14px 0 10px; color: #333; }
+    .row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .form-group { margin-bottom:10px; }
+    label { display:block; font-weight:600; margin-bottom:4px; font-size:13px; }
+    input, textarea, select { width:100%; border:1px solid #ddd; border-radius:4px; padding:10px; font-size:14px; background:#fafafa; }
+    input:focus, textarea:focus, select:focus { outline:none; border-color:var(--blue); background:#fff; }
+    textarea { min-height:60px; resize:vertical; }
+    button { border:0; border-radius:4px; padding:10px 14px; cursor:pointer; font-weight:600; font-size:13px; }
+    .btn-primary { background:var(--blue); color:#fff; }
+    .btn-warn { background:var(--yellow); color:#000; }
+    .btn-danger { background:var(--danger); color:#fff; }
+    .btn-ghost { background:#edf2ff; color:var(--blue); }
+    .btn-sm { padding:6px 10px; font-size:12px; }
+    .actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+    .product-item { display:flex; gap:10px; align-items:center; padding:8px 0; border-bottom:1px solid #eee; }
+    .product-item img { width:52px; height:52px; border-radius:4px; object-fit:contain; background:#f3f3f3; flex-shrink:0; }
+    .product-item .meta { flex:1; min-width:0; }
+    .product-item .meta strong { display:block; font-size:13px; margin-bottom:2px; }
+    .small { color:var(--muted); font-size:12px; }
+    .hidden { display:none !important; }
+    .pin-screen { text-align:center; padding:34px 18px; max-width:400px; margin:40px auto; }
+    .pin-screen input { max-width:220px; margin:0 auto 10px; text-align:center; font-size:26px; letter-spacing:6px; }
+    .star-row { display:flex; gap:4px; }
+    .star-btn { background:none; border:none; font-size:24px; cursor:pointer; color:#ccc; padding:0; }
+    .star-btn.on { color:#f9a825; }
+    .review-entry { background:#f7f9ff; border:1px solid #e0e8ff; border-radius:6px; padding:10px; margin-bottom:8px; }
+    .review-entry .rev-top { display:flex; justify-content:space-between; align-items:center; }
+    .review-entry .rev-name { font-weight:600; font-size:13px; }
+    .review-entry .rev-rating { background:var(--green); color:#fff; font-size:11px; padding:2px 6px; border-radius:3px; }
+    .review-entry .rev-comment { font-size:12px; color:#444; margin-top:4px; }
+    .review-entry .rev-del { background:none; border:none; color:var(--danger); font-size:18px; cursor:pointer; }
+    @media (max-width:520px) { .row { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+
+  <div id="pinScreen" class="card pin-screen">
+    <h2>Admin Access</h2>
+    <p class="small" style="margin-bottom:12px">Sign in with KeyAuth username/password</p>
+    <input type="text" id="adminUsername" placeholder="Username" style="font-size:14px;letter-spacing:0;text-align:left;">
+    <input type="password" id="adminPassword" placeholder="Password" style="font-size:14px;letter-spacing:0;text-align:left;">
+    <div class="actions" style="justify-content:center;margin-top:10px">
+      <button class="btn-primary" onclick="loginAdmin()">Login</button>
+      <a href="home.html"><button class="btn-ghost" type="button">Home</button></a>
+    </div>
+    <p id="pinError" class="small" style="color:#dc3545;display:none;margin-top:8px;">Invalid KeyAuth credentials</p>
+    <p class="small" style="margin-top:8px;">KeyAuth credentials use karke login karein.</p>
+  </div>
+
+  <div id="adminPanel" class="hidden">
+
+    <!-- UPI -->
+    <div class="card">
+      <h2>💳 UPI Payment Settings</h2>
+      <div class="row">
+        <div class="form-group">
+          <label>UPI ID</label>
+          <input type="text" id="upiId" placeholder="yourname@paytm">
+        </div>
+        <div class="form-group">
+          <label>Payee Name</label>
+          <input type="text" id="upiName" placeholder="Store Name">
+        </div>
+      </div>
+      <button class="btn-primary" onclick="saveUpi()">Save UPI</button>
+    </div>
+
+    <div class="card">
+      <h2>KeyAuth Password</h2>
+      <p class="small">Password change KeyAuth dashboard/user panel se hota hai.</p>
+    </div>
+
+    <div class="card">
+      <h2>Visitor Stats</h2>
+      <div class="row">
+        <div class="form-group">
+          <label>Total Visits</label>
+          <input type="text" id="visitsTotal" value="0" readonly>
+        </div>
+        <div class="form-group">
+          <label>Unique IP</label>
+          <input type="text" id="uniqueIps" value="0" readonly>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Repeat Visits (same IP)</label>
+        <input type="text" id="repeatIps" value="0" readonly>
+      </div>
+      <div class="form-group">
+        <label>Top IPs</label>
+        <div id="topIpList" class="small">No data yet.</div>
+      </div>
+      <button class="btn-ghost btn-sm" onclick="renderVisitStats()">Refresh Stats</button>
+    </div>
+
+    <!-- Banners -->
+    <div class="card">
+      <h2>🖼️ Home Page Banners</h2>
+      <p class="small" id="bannerStatus">Add banner image links for home page slider</p>
+      <div class="form-group" style="margin-top:10px">
+        <label>Banner Image Links (one per line)</label>
+        <textarea id="bannerLinks" placeholder="https://example.com/banner1.jpg&#10;https://example.com/banner2.webp"></textarea>
+        <p class="small">Direct image URL paste karein (http/https).</p>
+      </div>
+      <button class="btn-primary" onclick="saveBanners()">Save Banners</button>
+    </div>
+
+    <!-- Products List -->
+    <div class="card">
+      <h2>📦 Products (<span id="productCount">0</span>)</h2>
+      <div id="productList"></div>
+    </div>
+
+    <!-- Add/Edit Product -->
+    <div class="card">
+      <h2 id="formTitle">➕ Add New Product</h2>
+      <input type="hidden" id="editId">
+
+      <div class="form-group">
+        <label>Product Name *</label>
+        <input type="text" id="pName" placeholder="e.g. Men's Cotton Polo Shirt">
+      </div>
+
+      <div class="row">
+        <div class="form-group">
+          <label>MRP / Original Price (₹) *</label>
+          <input type="number" id="pMrp" placeholder="449">
+        </div>
+        <div class="form-group">
+          <label>Your Selling Price (₹) *</label>
+          <input type="number" id="pPrice" placeholder="99">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Main Image URL *</label>
+        <input type="url" id="pImage" placeholder="https://rukminim2.flixcart.com/image/...">
+      </div>
+
+      <div class="form-group">
+        <label>Additional Images (comma separated URLs)</label>
+        <input type="text" id="pGallery" placeholder="https://..., https://...">
+        <p class="small">Paste additional image URLs separated by commas</p>
+      </div>
+
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="pDesc" placeholder="Product description..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Product Type</label>
+        <select id="pType" onchange="applyProductTypePreset(this.value)">
+          <option value="clothes">Clothes</option>
+          <option value="shoes">Shoes</option>
+          <option value="electronics">Electronics</option>
+          <option value="mobiles">Mobiles</option>
+          <option value="watches">Watches</option>
+          <option value="bags">Bags</option>
+          <option value="beauty">Beauty</option>
+          <option value="grocery">Grocery</option>
+          <option value="home">Home</option>
+          <option value="sports">Sports</option>
+          <option value="toys">Toys</option>
+          <option value="books">Books</option>
+          <option value="accessories">Accessories</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+
+      <div class="row" id="sizeColorRow">
+        <div class="form-group">
+          <label id="sizeLabel">Sizes (comma separated)</label>
+          <input type="text" id="pSizes" placeholder="S,M,L,XL,XXL" value="S,M,L,XL">
+        </div>
+        <div class="form-group">
+          <label>Colors (comma separated)</label>
+          <input type="text" id="pColors" placeholder="Red,Blue,Black">
+        </div>
+      </div>
+
+      <div class="row" id="apparelRow">
+        <div class="form-group">
+          <label>Material</label>
+          <input type="text" id="pMaterial" placeholder="100% Cotton">
+        </div>
+        <div class="form-group">
+          <label>Care Instructions</label>
+          <input type="text" id="pCare" placeholder="Machine washable">
+        </div>
+      </div>
+
+      <div class="row hidden" id="electronicsRow">
+        <div class="form-group">
+          <label>Brand</label>
+          <input type="text" id="pBrand" placeholder="Samsung, boAt, Sony">
+        </div>
+        <div class="form-group">
+          <label>Model / Variant</label>
+          <input type="text" id="pModel" placeholder="A25 5G / 128GB">
+        </div>
+      </div>
+      <div class="form-group hidden" id="warrantyRow">
+        <label>Warranty</label>
+        <input type="text" id="pWarranty" placeholder="1 Year Manufacturer Warranty">
+      </div>
+
+      <div class="form-group">
+        <label>Availability</label>
+        <select id="pAvailability">
+          <option value="In Stock">In Stock</option>
+          <option value="Out of Stock">Out of Stock</option>
+          <option value="Limited">Limited Availability</option>
+        </select>
+      </div>
+
+      <!-- Reviews -->
+      <h3>⭐ Reviews</h3>
+      <div id="reviewsList"></div>
+      <div style="background:#f7f9ff;border:1px solid #e0e8ff;border-radius:6px;padding:12px;margin-bottom:10px">
+        <div class="row">
+          <div class="form-group" style="margin-bottom:6px">
+            <label>Reviewer Name</label>
+            <input type="text" id="revName" placeholder="John Doe">
+          </div>
+          <div class="form-group" style="margin-bottom:6px">
+            <label>Rating</label>
+            <div class="star-row" id="starRow">
+              <button class="star-btn on" data-v="1" onclick="setStar(1)">★</button>
+              <button class="star-btn on" data-v="2" onclick="setStar(2)">★</button>
+              <button class="star-btn on" data-v="3" onclick="setStar(3)">★</button>
+              <button class="star-btn on" data-v="4" onclick="setStar(4)">★</button>
+              <button class="star-btn on" data-v="5" onclick="setStar(5)">★</button>
+            </div>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:6px">
+          <label>Comment</label>
+          <input type="text" id="revComment" placeholder="Great product, fast delivery!">
+        </div>
+        <button class="btn-primary btn-sm" onclick="addReview()">+ Add Review</button>
+      </div>
+
+      <div class="actions">
+        <button class="btn-primary" onclick="saveProduct()">Save Product</button>
+        <button class="btn-ghost" onclick="clearForm()">Clear</button>
+      </div>
+    </div>
+
+    <!-- Logout -->
+    <div class="card">
+      <div class="actions">
+        <button class="btn-warn" onclick="window.location.href='home.html'">Open Store</button>
+        <button class="btn-danger" onclick="logout()">Logout</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script src="js/keyauth.js"></script>
+  <script>
+    const KeyAuthApp = (typeof KeyAuth !== 'undefined')
+      ? new KeyAuth({
+          name: "xlgr",
+          ownerid: "okY6unb69f",
+          version: "1.0"
+        })
+      : null;
+
+    let pendingReviews = [];
+    let currentStar = 5;
+    let adminLoaded = false;
+    let keyAuthInitialized = false;
+
+    function setStar(v) {
+      currentStar = v;
+      document.querySelectorAll('#starRow .star-btn').forEach((btn, i) => {
+        btn.classList.toggle('on', i < v);
+      });
+    }
+
+    function addReview() {
+      const name = document.getElementById('revName').value.trim() || 'User';
+      const comment = document.getElementById('revComment').value.trim() || 'Good product';
+      pendingReviews.push({ name, rating: currentStar, comment });
+      document.getElementById('revName').value = '';
+      document.getElementById('revComment').value = '';
+      setStar(5);
+      renderReviews();
+    }
+
+    function renderReviews() {
+      const el = document.getElementById('reviewsList');
+      if (!pendingReviews.length) {
+        el.innerHTML = '<p class="small">No reviews added yet.</p>';
+        return;
+      }
+      el.innerHTML = pendingReviews.map((r, i) => `
+        <div class="review-entry">
+          <div class="rev-top">
+            <span class="rev-name">${r.name}</span>
+            <span class="rev-rating">${r.rating}★</span>
+            <button class="rev-del" onclick="removeReview(${i})">×</button>
+          </div>
+          <div class="rev-comment">${r.comment}</div>
+        </div>
+      `).join('');
+    }
+
+    function removeReview(i) {
+      pendingReviews.splice(i, 1);
+      renderReviews();
+    }
+
+    function inferProductType(p) {
+      if (!p) return 'clothes';
+      if (p.productType) return p.productType;
+      if (p.brand || p.model || p.warranty) return 'electronics';
+      const sizes = (p.sizes || []).map(s => String(s).trim()).filter(Boolean);
+      if (sizes.length && sizes.every(s => /^\d+(\.\d+)?$/.test(s))) return 'shoes';
+      return 'clothes';
+    }
+
+    function applyProductTypePreset(type, preserveValues) {
+      const t = type || 'clothes';
+      const isTechType = t === 'electronics' || t === 'mobiles';
+      const isShoes = t === 'shoes';
+      const isClothes = t === 'clothes';
+      const isVariantType = ['watches', 'bags', 'beauty', 'grocery', 'home', 'sports', 'toys', 'books', 'accessories', 'other'].includes(t);
+
+      document.getElementById('sizeColorRow').classList.toggle('hidden', isTechType);
+      document.getElementById('apparelRow').classList.toggle('hidden', !isClothes);
+      document.getElementById('electronicsRow').classList.toggle('hidden', !isTechType);
+      document.getElementById('warrantyRow').classList.toggle('hidden', !isTechType);
+
+      const sizeLabel = document.getElementById('sizeLabel');
+      const sizeInput = document.getElementById('pSizes');
+      if (isShoes) {
+        sizeLabel.textContent = 'Shoe Sizes (comma separated)';
+        sizeInput.placeholder = '5,6,7,8,9,10';
+        if (!preserveValues) sizeInput.value = '6,7,8,9';
+      } else if (isVariantType) {
+        sizeLabel.textContent = 'Variants (comma separated)';
+        sizeInput.placeholder = 'Standard, Premium';
+        if (!preserveValues) sizeInput.value = 'Standard';
+      } else {
+        sizeLabel.textContent = 'Sizes (comma separated)';
+        sizeInput.placeholder = 'S,M,L,XL,XXL';
+        if (!preserveValues && !isTechType) sizeInput.value = 'S,M,L,XL';
+      }
+
+      if (!preserveValues && isTechType) {
+        document.getElementById('pSizes').value = '';
+        document.getElementById('pColors').value = '';
+        document.getElementById('pMaterial').value = '';
+        document.getElementById('pCare').value = '';
+      }
+    }
+
+    // Auth
+    async function loginAdmin() {
+      const username = document.getElementById('adminUsername').value.trim();
+      const password = document.getElementById('adminPassword').value;
+      const err = document.getElementById('pinError');
+      err.style.display = 'none';
+
+      if (!username || !password) {
+        err.textContent = 'Enter username and password';
+        err.style.display = 'block';
+        return;
+      }
+      try {
+        if (!KeyAuthApp) throw new Error('KeyAuth SDK not loaded');
+        if (!keyAuthInitialized) {
+          await KeyAuthApp.init();
+          keyAuthInitialized = true;
+        }
+        await KeyAuthApp.login(username, password);
+        openAdmin();
+      } catch (e) {
+        const msg = (e && e.message) ? e.message : 'Login failed';
+        if (/Failed to fetch|NetworkError|CORS/i.test(msg)) {
+          err.textContent = 'Network/CORS error. Open site via localhost server, not file://';
+        } else {
+          err.textContent = msg;
+        }
+        err.style.display = 'block';
+        console.error('KeyAuth login error:', e);
+      }
+    }
+
+    async function changeAdminPassword() {
+      alert('KeyAuth password change dashboard/user panel se karein.');
+    }
+
+    function openAdmin() {
+      document.getElementById('pinScreen').classList.add('hidden');
+      document.getElementById('adminPanel').classList.remove('hidden');
+      if (!adminLoaded) {
+        adminLoaded = true;
+        loadAdmin();
+      }
+    }
+
+    async function logout() {
+      location.reload();
+    }
+
+    document.getElementById('adminPassword').addEventListener('keypress', e => { if (e.key === 'Enter') loginAdmin(); });
+    document.getElementById('adminUsername').addEventListener('keypress', e => { if (e.key === 'Enter') loginAdmin(); });
+
+    async function renderVisitStats() {
+      const stats = await APP.getVisitStats();
+      document.getElementById('visitsTotal').value = String(stats.total || 0);
+      document.getElementById('uniqueIps').value = String(stats.uniqueIps || 0);
+      document.getElementById('repeatIps').value = String(stats.repeatVisits || 0);
+      const top = stats.topIps || [];
+      document.getElementById('topIpList').innerHTML = top.length
+        ? top.map(x => `${x.ip} (${x.count})`).join('<br>')
+        : 'No data yet.';
+    }
+
+    // Load
+    async function loadAdmin() {
+      await APP.initBackend();
+      const upi = await APP.getUpiAsync();
+      document.getElementById('upiId').value = upi.upiId || '';
+      document.getElementById('upiName').value = upi.name || '';
+      const banners = await APP.getBannersAsync();
+      document.getElementById('bannerStatus').textContent = banners.length
+        ? `${banners.length} banner(s) currently saved`
+        : 'Add banner image links for home page slider';
+      document.getElementById('bannerLinks').value = (banners || []).join('\n');
+      await renderVisitStats();
+      renderProducts();
+    }
+
+    // Save UPI
+    async function saveUpi() {
+      const res = await APP.saveUpi({
+        upiId: document.getElementById('upiId').value.trim(),
+        name: document.getElementById('upiName').value.trim(),
+        note: 'Order Payment'
+      });
+      if (res && res.remoteSaved) {
+        alert('UPI saved and synced to all devices.');
+      } else {
+        alert('UPI saved only on this device (backend sync failed).');
+      }
+    }
+
+    // Banners
+    async function saveBanners() {
+      const raw = document.getElementById('bannerLinks').value.trim();
+      const urls = raw.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+      if (!urls.length) { alert('At least 1 banner image link is required'); return; }
+      const invalid = urls.filter(u => !/^https?:\/\//i.test(u));
+      if (invalid.length) { alert('Invalid URL found. Please use full http/https links.'); return; }
+      await APP.initBackend();
+      const res = await APP.saveBanners(urls);
+      if (res && res.remoteSaved) {
+        document.getElementById('bannerStatus').textContent = `${urls.length} banner(s) synced`;
+        alert('Banners saved and synced to all devices.');
+      } else {
+        document.getElementById('bannerStatus').textContent = 'Saved locally only. Try fewer/smaller images.';
+        alert('Banners saved only on this device (backend sync failed).');
+      }
+    }
+
+    // Products
+    async function renderProducts() {
+      const products = await APP.getProductsAsync();
+      document.getElementById('productCount').textContent = products.length;
+      const html = products.map(p => `
+        <div class="product-item">
+          <img src="${p.image || 'https://placehold.co/52x52/f1f3f6/2874f0?text=?'}" alt="">
+          <div class="meta">
+            <strong>${p.name || 'Unnamed'}</strong>
+            <div class="small">₹${p.price} (MRP ₹${p.mrp}) • ${p.availability || 'In Stock'}</div>
+          </div>
+          <div class="actions">
+            <button class="btn-ghost btn-sm" onclick="editProduct('${p.id}')">Edit</button>
+            <button class="btn-danger btn-sm" onclick="deleteProduct('${p.id}')">Del</button>
+          </div>
+        </div>`).join('');
+      document.getElementById('productList').innerHTML = html || '<p class="small">No products yet. Add one below.</p>';
+    }
+
+    // Save Product
+    async function saveProduct() {
+      const id = document.getElementById('editId').value;
+      const name = document.getElementById('pName').value.trim();
+      const mrp = parseInt(document.getElementById('pMrp').value, 10) || 0;
+      const price = parseInt(document.getElementById('pPrice').value, 10) || 0;
+      const image = document.getElementById('pImage').value.trim();
+      const galleryTxt = document.getElementById('pGallery').value.trim();
+      const gallery = galleryTxt ? galleryTxt.split(',').map(s => s.trim()).filter(Boolean) : [];
+      const desc = document.getElementById('pDesc').value.trim();
+      const productType = document.getElementById('pType').value;
+      const isTechType = productType === 'electronics' || productType === 'mobiles';
+      const variantLabelByType = {
+        clothes: 'Size',
+        shoes: 'Shoe Size',
+        watches: 'Variant',
+        bags: 'Size',
+        beauty: 'Pack',
+        grocery: 'Weight/Pack',
+        home: 'Size',
+        sports: 'Size',
+        toys: 'Age Group',
+        books: 'Format',
+        accessories: 'Variant',
+        other: 'Variant'
+      };
+      const sizes = isTechType
+        ? []
+        : document.getElementById('pSizes').value.split(',').map(s => s.trim()).filter(Boolean);
+      const colors = isTechType
+        ? []
+        : document.getElementById('pColors').value.split(',').map(s => s.trim()).filter(Boolean);
+      const material = productType === 'clothes' ? document.getElementById('pMaterial').value.trim() : '';
+      const care = productType === 'clothes' ? document.getElementById('pCare').value.trim() : '';
+      const brand = isTechType ? document.getElementById('pBrand').value.trim() : '';
+      const model = isTechType ? document.getElementById('pModel').value.trim() : '';
+      const warranty = isTechType ? document.getElementById('pWarranty').value.trim() : '';
+      const variantLabel = variantLabelByType[productType] || 'Variant';
+      const availability = document.getElementById('pAvailability').value;
+
+      if (!name) { alert('Product Name is required'); return; }
+      if (!image) { alert('Product Image URL is required'); return; }
+      if (price > mrp) { alert('Selling price cannot exceed MRP'); return; }
+      if (!isTechType && !sizes.length) { alert('Please enter at least one variant/size'); return; }
+      if (isTechType && !brand && !model) { alert('For tech products, add Brand or Model'); return; }
+
+      // Calculate rating from reviews
+      const ratingCount = pendingReviews.length;
+      const avgRating = ratingCount ? pendingReviews.reduce((s, r) => s + r.rating, 0) / ratingCount : 4.2;
+
+      const products = await APP.getProductsAsync();
+      if (id) {
+        const idx = products.findIndex(p => p.id === id);
+        if (idx !== -1) {
+          products[idx] = {
+            ...products[idx],
+            productType,
+            variantLabel,
+            name, mrp, price, image, gallery, description: desc,
+            sizes, colors, material, careInstructions: care,
+            brand, model, warranty, availability,
+            reviews: pendingReviews,
+            rating: Number(avgRating.toFixed(1)),
+            ratingCount
+          };
+        }
+      } else {
+        products.push({
+          id: APP.generateId(),
+          productType,
+          variantLabel,
+          name, mrp, price, image, gallery, description: desc,
+          sizes, colors, material, careInstructions: care,
+          brand, model, warranty, availability,
+          reviews: pendingReviews,
+          rating: Number(avgRating.toFixed(1)),
+          ratingCount
+        });
+      }
+      await APP.saveProducts(products);
+      clearForm();
+      renderProducts();
+      alert('Product saved!');
+    }
+
+    // Edit
+    async function editProduct(id) {
+      const products = await APP.getProductsAsync();
+      const p = products.find(x => x.id === id);
+      if (!p) return;
+      const productType = inferProductType(p);
+      document.getElementById('editId').value = p.id;
+      document.getElementById('formTitle').textContent = '✏️ Edit Product';
+      document.getElementById('pName').value = p.name || '';
+      document.getElementById('pMrp').value = p.mrp || '';
+      document.getElementById('pPrice').value = p.price || '';
+      document.getElementById('pImage').value = p.image || '';
+      document.getElementById('pGallery').value = (p.gallery || []).join(', ');
+      document.getElementById('pDesc').value = p.description || '';
+      document.getElementById('pType').value = productType;
+      applyProductTypePreset(productType, true);
+      document.getElementById('pSizes').value = (p.sizes || []).join(',');
+      document.getElementById('pColors').value = (p.colors || []).join(',');
+      document.getElementById('pMaterial').value = p.material || '';
+      document.getElementById('pCare').value = p.careInstructions || '';
+      document.getElementById('pBrand').value = p.brand || '';
+      document.getElementById('pModel').value = p.model || '';
+      document.getElementById('pWarranty').value = p.warranty || '';
+      document.getElementById('pAvailability').value = p.availability || 'In Stock';
+      pendingReviews = (p.reviews || []).map(r => ({ name: r.name, rating: r.rating, comment: r.comment }));
+      renderReviews();
+      document.getElementById('formTitle').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Delete
+    async function deleteProduct(id) {
+      if (!confirm('Delete this product?')) return;
+      const products = await APP.getProductsAsync();
+      const filtered = products.filter(p => p.id !== id);
+      await APP.saveProducts(filtered);
+      renderProducts();
+    }
+
+    // Clear
+    function clearForm() {
+      document.getElementById('editId').value = '';
+      document.getElementById('formTitle').textContent = '➕ Add New Product';
+      document.getElementById('pName').value = '';
+      document.getElementById('pMrp').value = '';
+      document.getElementById('pPrice').value = '';
+      document.getElementById('pImage').value = '';
+      document.getElementById('pGallery').value = '';
+      document.getElementById('pDesc').value = '';
+      document.getElementById('pType').value = 'clothes';
+      document.getElementById('pSizes').value = 'S,M,L,XL';
+      document.getElementById('pColors').value = '';
+      document.getElementById('pMaterial').value = '';
+      document.getElementById('pCare').value = '';
+      document.getElementById('pBrand').value = '';
+      document.getElementById('pModel').value = '';
+      document.getElementById('pWarranty').value = '';
+      document.getElementById('pAvailability').value = 'In Stock';
+      applyProductTypePreset('clothes', true);
+      pendingReviews = [];
+      renderReviews();
+      setStar(5);
+    }
+
+    renderReviews();
+    applyProductTypePreset('clothes', true);
+  </script>
+</body>
+</html>
+
+
+
+

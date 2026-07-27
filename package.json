@@ -1,0 +1,9 @@
+{
+  "name": "flipkart-theme-shop",
+  "version": "1.0.0",
+  "description": "Flipkart-style e-commerce theme with Python API backend",
+  "scripts": {
+    "start": "npx serve . -l 3000",
+    "dev": "npx vercel dev"
+  }
+}

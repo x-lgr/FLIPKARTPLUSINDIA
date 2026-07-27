@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#2874f0">
+  <title>Order Summary</title>
+  <link rel="stylesheet" href="css/flipkart.css">
+  <style>
+    .wrap { max-width: 560px; margin: 0 auto; }
+    .card { background: #fff; border: 1px solid #e5e5e5; border-radius: 6px; margin: 10px 0; padding: 16px; }
+    .head { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+    .line { font-size: 15px; color: #222; margin: 4px 0; }
+    .prod { display: flex; gap: 12px; align-items: center; }
+    .prod img { width: 120px; height: 120px; object-fit: contain; background: #f4f4f4; border-radius: 6px; }
+    .prod-name { font-size: 16px; line-height: 1.3; font-weight: 500; }
+    .qty { font-size: 16px; margin-top: 8px; }
+    .price-card .row { display: flex; justify-content: space-between; font-size: 16px; margin: 8px 0; }
+    .green { color: #0a9a20; }
+    .safe { background: #eceff1; color: #666; padding: 14px 16px; font-size: 14px; margin: 12px 0; }
+    .footer { position: sticky; bottom: 0; background: #fff; border-top: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; }
+    .total { font-size: 34px; font-weight: 700; }
+    .old { font-size: 12px; color: #8e8e8e; text-decoration: line-through; display: block; }
+    .btn { background: #ffc107; border: none; border-radius: 4px; padding: 12px 24px; font-size: 18px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <header class="fk-header">
+    <a href="checkout.html" class="fk-back" aria-label="Back">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    </a>
+    <span style="font-weight:600">Order Summary</span>
+    <span style="width:24px"></span>
+  </header>
+
+  <div class="fk-stepper">
+    <div class="step"><span class="num">1</span> Address</div>
+    <div class="step active"><span class="num">2</span> Order Summary</div>
+    <div class="step"><span class="num">3</span> Payment</div>
+  </div>
+
+  <div class="wrap">
+    <div class="card">
+      <div class="head">Delivered to:</div>
+      <div class="line" id="delName"></div>
+      <div class="line" id="delAddress"></div>
+      <div class="line" id="delMobile"></div>
+    </div>
+
+    <div class="card">
+      <div class="prod">
+        <img id="itemImg" src="" alt="item">
+        <div>
+          <div class="prod-name" id="itemName"></div>
+          <div class="qty" id="itemQty"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card price-card">
+      <div class="head">Price Details</div>
+      <div class="row"><span>Price (1 item)</span><span id="mrpRow">Rs0</span></div>
+      <div class="row"><span>Discount</span><span class="green" id="discountRow">-Rs0</span></div>
+      <div class="row"><span>Delivery Charges</span><span class="green">FREE Delivery</span></div>
+      <hr style="border:none;border-top:1px solid #ececec;margin:10px 0">
+      <div class="row"><span>Total Amount</span><span id="totalRow">Rs0</span></div>
+      <div class="row"><span class="green" id="saveRow">You will save Rs0 on this order</span></div>
+    </div>
+
+    <div class="safe">Safe and secure payments. Easy returns. 100% Authentic products.</div>
+  </div>
+
+  <div class="footer">
+    <div>
+      <span class="old" id="oldTotal">Rs0</span>
+      <span class="total" id="payTotal">Rs0</span>
+    </div>
+    <button class="btn" onclick="goPayment()">Continue</button>
+  </div>
+
+  <script>
+    function formatRs(v) { return '\u20B9' + Number(v || 0).toFixed(0); }
+
+    const addr = JSON.parse(localStorage.getItem('address') || '{}');
+    const items = JSON.parse(localStorage.getItem('products') || '[]');
+    const item = items[0] || {};
+
+    if (!items.length) {
+      alert('No item found. Please select product first.');
+      window.location.href = 'home.html';
+    }
+
+    const qty = item.qty || 1;
+    const price = Number(item.price || 0) * qty;
+    const mrp = Number(item.mrp || item.price || 0) * qty;
+    const discount = Math.max(0, mrp - price);
+
+    document.getElementById('delName').textContent = addr.name || '';
+    document.getElementById('delAddress').textContent = [addr.address || '', addr.city || '', addr.pincode || ''].join(' ').trim();
+    document.getElementById('delMobile').textContent = addr.mobile || '';
+
+    document.getElementById('itemImg').src = item.product_img || 'https://placehold.co/120x120/f1f3f6/2874f0?text=Item';
+    document.getElementById('itemName').textContent = item.product_title || 'Product';
+    document.getElementById('itemQty').textContent = 'Qty: ' + qty + '   ' + formatRs(price);
+
+    document.getElementById('mrpRow').textContent = formatRs(mrp);
+    document.getElementById('discountRow').textContent = '-' + formatRs(discount);
+    document.getElementById('totalRow').textContent = formatRs(price);
+    document.getElementById('saveRow').textContent = 'You will save ' + formatRs(discount) + ' on this order';
+
+    document.getElementById('oldTotal').textContent = formatRs(mrp);
+    document.getElementById('payTotal').textContent = formatRs(price);
+
+    localStorage.setItem('cartTotalAmount', String(price.toFixed(2)));
+
+    function goPayment() {
+      window.location.href = 'payment.html';
+    }
+  </script>
+</body>
+</html>

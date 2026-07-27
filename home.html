@@ -1,0 +1,285 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#2874f0">
+  <title>Flipkart - Online Shopping</title>
+  <link rel="icon" href="logo.png" type="image/png">
+  <style>
+    :root{--blue:#2874f0;--yellow:#ffe500;--bg:#f1f3f6;--green:#388e3c;--text:#212121;--muted:#878787;}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);max-width:480px;margin:0 auto;min-height:100vh;}
+    a{text-decoration:none;color:inherit;}
+    /* â”€â”€ NAV â”€â”€ */
+    .fk-nav{background:var(--blue);padding:10px 12px 8px;position:sticky;top:0;z-index:100;box-shadow:0 2px 4px rgba(0,0,0,.15);}
+    .fk-nav-row{display:flex;align-items:center;gap:10px;}
+    .fk-brand{display:flex;flex-direction:column;line-height:1;flex-shrink:0;}
+    .fk-brand .name{font-size:18px;font-weight:700;color:#fff;letter-spacing:-.5px;}
+    .fk-brand .plus{font-size:9px;font-style:italic;color:var(--yellow);margin-top:-2px;}
+    .fk-search-box{flex:1;display:flex;align-items:center;background:#fff;border-radius:2px;padding:8px 10px;gap:6px;}
+    .fk-search-box input{flex:1;border:none;outline:none;font-size:14px;color:#333;}
+    .fk-search-box input::placeholder{color:#aaa;}
+    .fk-search-box svg{color:var(--blue);flex-shrink:0;}
+    .fk-cart-wrap{position:relative;}
+    .fk-cart-badge{position:absolute;top:-5px;right:-8px;background:var(--yellow);color:var(--blue);font-size:10px;font-weight:700;min-width:16px;height:16px;border-radius:50%;display:none;align-items:center;justify-content:center;}
+    .fk-nav-icons{color:#fff;font-size:12px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:1px;}
+    /* â”€â”€ CATEGORIES â”€â”€ */
+    .fk-cats{background:#fff;display:flex;overflow-x:auto;gap:0;border-bottom:3px solid var(--bg);scrollbar-width:none;}
+    .fk-cats::-webkit-scrollbar{display:none;}
+    .fk-cat{display:flex;flex-direction:column;align-items:center;padding:10px 14px;gap:4px;flex-shrink:0;cursor:pointer;border-bottom:2px solid transparent;font-size:11px;font-weight:600;color:#555;white-space:nowrap;}
+    .fk-cat.active{color:var(--blue);border-bottom-color:var(--blue);}
+    .fk-cat .icon{font-size:20px;line-height:1;}
+    /* â”€â”€ BANNER â”€â”€ */
+    .fk-banner{position:relative;background:#fff;overflow:hidden;}
+    .fk-banner img{width:100%;height:170px;object-fit:cover;display:block;}
+    .fk-dots{position:absolute;bottom:6px;left:0;right:0;display:flex;justify-content:center;gap:5px;}
+    .fk-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.6);cursor:pointer;transition:.2s;}
+    .fk-dot.on{width:16px;border-radius:8px;background:#fff;}
+    /* â”€â”€ DEAL STRIP â”€â”€ */
+    .fk-deal{background:#fff;margin:8px 0 0;padding:10px 12px;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#c0392b;}
+    /* â”€â”€ TIMER STRIP â”€â”€ */
+    .fk-timer{background:linear-gradient(90deg,#ff4d4d,#c0392b);color:#fff;padding:8px 12px;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px;}
+    .fk-timer svg{flex-shrink:0;}
+    .fk-timer-time{font-size:15px;font-weight:700;letter-spacing:1px;}
+    /* â”€â”€ SECTION â”€â”€ */
+    .fk-sec{background:#fff;margin-top:8px;padding:12px 12px 4px;display:flex;justify-content:space-between;align-items:center;}
+    .fk-sec h2{font-size:16px;font-weight:700;}
+    .fk-sec a{font-size:12px;color:var(--blue);}
+    /* â”€â”€ PRODUCT GRID â”€â”€ */
+    .fk-grid{background:#fff;padding:4px 8px 12px;display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+    .fk-card{border:1px solid #f0f0f0;border-radius:4px;overflow:hidden;background:#fff;display:block;transition:box-shadow .2s;}
+    .fk-card:active{box-shadow:0 2px 8px rgba(0,0,0,.12);}
+    .fk-card .img-box{position:relative;padding-top:100%;background:var(--bg);overflow:hidden;}
+    .fk-card .img-box img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;}
+    .fk-card .off-tag{position:absolute;top:6px;left:0;background:var(--green);color:#fff;font-size:10px;font-weight:700;padding:2px 5px;}
+    .fk-card .info{padding:8px;}
+    .fk-card .p-name{font-size:12px;font-weight:500;color:var(--text);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.4;min-height:2.8em;}
+    .fk-card .p-price{font-size:15px;font-weight:700;margin-top:4px;}
+    .fk-card .p-row{display:flex;align-items:center;gap:5px;margin-top:2px;}
+    .fk-card .p-mrp{font-size:11px;color:var(--muted);text-decoration:line-through;}
+    .fk-card .p-off{font-size:11px;color:var(--green);font-weight:600;}
+    .fk-card .p-rating{display:inline-flex;align-items:center;gap:2px;background:var(--green);color:#fff;font-size:10px;font-weight:700;padding:2px 5px;border-radius:2px;margin-top:4px;}
+    .fk-card .p-delivery{font-size:10px;color:var(--muted);margin-top:3px;}
+    .p-timer{font-size:11px;color:#dc3545;font-weight:700;margin-top:4px;display:flex;align-items:center;gap:3px;}
+    .p-timer svg{width:12px;height:12px;}
+    .fk-empty{text-align:center;padding:40px 20px;color:var(--muted);}
+    .fk-empty .h{font-size:16px;font-weight:700;color:#333;margin-bottom:8px;}
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="fk-nav">
+    <div class="fk-nav-row">
+      <a href="home.html" class="fk-brand"><span class="name">Flipkart</span><span class="plus">Explore <b style="color:#ffe500">Plus</b></span></a>
+      <div class="fk-search-box">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="search" placeholder="Search for products, brands and more" readonly onclick="this.blur()">
+      </div>
+      <a href="cart.html" class="fk-cart-wrap fk-nav-icons">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+        <span id="cartBadge" class="fk-cart-badge">0</span>
+        <span>Cart</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- CATEGORIES -->
+  <div class="fk-cats">
+    <div class="fk-cat active" data-cat="all"><span class="icon">&#127968;</span>All</div>
+    <div class="fk-cat" data-cat="fashion"><span class="icon">&#128085;</span>Fashion</div>
+    <div class="fk-cat" data-cat="mobiles"><span class="icon">&#128241;</span>Mobiles</div>
+    <div class="fk-cat" data-cat="home"><span class="icon">&#127968;</span>Home</div>
+    <div class="fk-cat" data-cat="beauty"><span class="icon">&#128132;</span>Beauty</div>
+    <div class="fk-cat" data-cat="sports"><span class="icon">&#9917;</span>Sports</div>
+    <div class="fk-cat" data-cat="bags"><span class="icon">&#127890;</span>Bags</div>
+  </div>
+
+  <!-- BANNER -->
+  <div class="fk-banner">
+    <img id="bannerImg" src="https://placehold.co/480x170/2874f0/ffe500?text=Big+Sale" alt="Banner">
+    <div class="fk-dots" id="bannerDots"></div>
+  </div>
+
+  <!-- 20-MINUTE TIMER -->
+  <div class="fk-timer">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+    <span>Flash Sale Ends in:</span>
+    <span class="fk-timer-time" id="timerDisplay">20:00</span>
+  </div>
+
+  <!-- DEAL STRIP -->
+  <div class="fk-deal"><span>&#128293;</span><span style="flex:1">Buy 2 Get 1 Free &bull; Free Delivery on all orders</span><a href="#" style="color:var(--blue);font-weight:500">See All &rsaquo;</a></div>
+
+  <!-- PRODUCTS -->
+  <div class="fk-sec"><h2>Products For You</h2><a href="#">See All &rsaquo;</a></div>
+  <div class="fk-grid" id="productGrid">
+    <div class="fk-empty"><div class="h">Loading products...</div></div>
+  </div>
+
+  <div style="height:20px;background:#fff"></div>
+
+    <script src="js/app.js"></script>
+  <script>
+    const CATEGORY_LABELS = {
+      all: 'All',
+      fashion: 'Fashion',
+      mobiles: 'Mobiles',
+      home: 'Home',
+      beauty: 'Beauty',
+      sports: 'Sports',
+      bags: 'Bags'
+    };
+
+    const CATEGORY_TYPE_MAP = {
+      fashion: ['clothes', 'shoes', 'watches', 'accessories'],
+      mobiles: ['mobiles', 'electronics'],
+      home: ['home', 'grocery'],
+      beauty: ['beauty'],
+      sports: ['sports'],
+      bags: ['bags']
+    };
+
+    let allProducts = [];
+    let currentCategory = 'all';
+
+    // 20-minute countdown timer
+    function startTimer() {
+      let min = 20, sec = 0;
+      const disp = document.getElementById('timerDisplay');
+      setInterval(() => {
+        if (sec === 0) { if (min === 0) { min = 20; sec = 0; } else { min--; sec = 59; } }
+        else sec--;
+        disp.textContent = (min < 10 ? '0' + min : min) + ':' + (sec < 10 ? '0' + sec : sec);
+      }, 1000);
+    }
+    startTimer();
+
+    // Banner slider
+    function startSlider(banners) {
+      if (!banners.length) return;
+      const img = document.getElementById('bannerImg');
+      const dots = document.getElementById('bannerDots');
+      let cur = 0;
+      dots.innerHTML = banners.map((_, i) => `<span class="fk-dot${i === 0 ? ' on' : ''}" data-i="${i}"></span>`).join('');
+      function show(i) {
+        cur = i % banners.length;
+        img.src = banners[cur];
+        dots.querySelectorAll('.fk-dot').forEach((d, di) => d.classList.toggle('on', di === cur));
+      }
+      dots.querySelectorAll('.fk-dot').forEach((d, i) => d.onclick = () => show(i));
+      show(0);
+      setInterval(() => show(cur + 1), 2800);
+    }
+
+    // Image resolver
+    function resolveImages(candidates, cb) {
+      const ok = [];
+      let i = 0;
+      function nxt() {
+        if (i >= candidates.length) { cb(ok); return; }
+        const t = new Image();
+        t.onload = () => { ok.push(candidates[i]); i++; nxt(); };
+        t.onerror = () => { i++; nxt(); };
+        t.src = candidates[i];
+      }
+      nxt();
+    }
+
+    function normalizeType(product) {
+      return String(product && product.productType ? product.productType : '').trim().toLowerCase();
+    }
+
+    function matchesCategory(product, category) {
+      if (category === 'all') return true;
+      const type = normalizeType(product);
+      const allowed = CATEGORY_TYPE_MAP[category] || [];
+      return allowed.includes(type);
+    }
+
+    function renderCategoryProducts() {
+      const filtered = allProducts.filter(p => matchesCategory(p, currentCategory));
+      renderProducts(filtered);
+    }
+
+    function bindCategoryTabs() {
+      document.querySelectorAll('.fk-cat').forEach(tab => {
+        tab.onclick = () => {
+          currentCategory = tab.dataset.cat || 'all';
+          document.querySelectorAll('.fk-cat').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          renderCategoryProducts();
+        };
+      });
+    }
+
+    // Render products
+    function renderProducts(products) {
+      const grid = document.getElementById('productGrid');
+      const heading = document.querySelector('.fk-sec h2');
+      if (heading) heading.textContent = currentCategory === 'all' ? 'Products For You' : `${CATEGORY_LABELS[currentCategory] || 'Category'} Products`;
+      if (!products.length) {
+        grid.innerHTML = `<div class="fk-empty"><div class="h">No products in ${CATEGORY_LABELS[currentCategory] || 'this category'}</div><p>Admin can add items for this category from panel.</p></div>`;
+        return;
+      }
+      grid.innerHTML = products.map(p => {
+        const off = APP.getOffPercent(p.price || 0, p.mrp || 0);
+        return `<a href="product2.html?id=${p.id}" class="fk-card">
+          <div class="img-box">
+            <img src="${p.image || 'https://placehold.co/400x400/f1f3f6/2874f0?text=No+Image'}" alt="${p.name || ''}" loading="lazy">
+            <span class="off-tag">${off}% off</span>
+          </div>
+          <div class="info">
+            <div class="p-name">${p.name || 'Unnamed Product'}</div>
+            <div class="p-price">₹${p.price || 0}</div>
+            <div class="p-row"><span class="p-mrp">₹${p.mrp || 0}</span><span class="p-off">${off}% off</span></div>
+            <span class="p-rating">${(p.rating || 4.2).toFixed(1)} ★ <span style="opacity:.7">(${p.ratingCount || 0})</span></span>
+            <div class="p-delivery">Free Delivery</div>
+            <div class="p-timer" id="timer-${p.id}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              <span class="timer-val">20:00</span> left
+            </div>
+          </div>
+        </a>`;
+      }).join('');
+      setTimeout(startProductTimers, 100);
+    }
+
+    function startProductTimers() {
+      document.querySelectorAll('[id^="timer-"]').forEach(el => {
+        if (el.dataset.started) return;
+        el.dataset.started = 'true';
+        let min = 20, sec = 0;
+        const val = el.querySelector('.timer-val');
+        setInterval(() => {
+          if (sec === 0) { if (min === 0) { min = 20; sec = 0; } else { min--; sec = 59; } }
+          else sec--;
+          val.textContent = (min < 10 ? '0' + min : min) + ':' + (sec < 10 ? '0' + sec : sec);
+        }, 1000);
+      });
+    }
+
+    // Cart count
+    function updateCartCount() {
+      const items = JSON.parse(localStorage.getItem('products') || '[]');
+      const badge = document.getElementById('cartBadge');
+      if (items.length) { badge.textContent = items.length; badge.style.display = 'flex'; }
+      else badge.style.display = 'none';
+    }
+
+    // Init
+    (async function init() {
+      await APP.initBackend();
+      APP.recordVisit().catch(() => {});
+      bindCategoryTabs();
+      allProducts = await APP.getProductsAsync();
+      renderCategoryProducts();
+      updateCartCount();
+      const banners = await APP.getBannersAsync();
+      const fb = ['https://placehold.co/480x170/2874f0/ffe500?text=Biggest+Sale+Now','https://placehold.co/480x170/0f172a/ffffff?text=Weekend+Super+Deals'];
+      resolveImages(banners.length ? banners : fb, found => startSlider(found.length ? found : fb));
+    })();
+  </script>
+</body>
+</html>

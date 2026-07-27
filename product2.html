@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#2874f0">
+  <title>Product - Flipkart</title>
+  <style>
+    :root{--blue:#2874f0;--yellow:#ffe500;--bg:#f1f3f6;--green:#388e3c;--text:#212121;--muted:#878787;}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);max-width:480px;margin:0 auto;min-height:100vh;}
+    a{text-decoration:none;color:inherit;}
+    .fk-header{background:var(--blue);color:#fff;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+    .fk-header a{color:#fff;}
+    .fk-header .back{font-size:20px;}
+    .fk-header .logo{font-size:18px;font-weight:700;}
+    .fk-header .logo .y{color:var(--yellow);}
+    .fk-header .cart{position:relative;}
+    .fk-badge{position:absolute;top:-5px;right:-8px;background:var(--yellow);color:var(--blue);font-size:10px;font-weight:700;min-width:16px;height:16px;border-radius:50%;display:none;align-items:center;justify-content:center;}
+    /* Product */
+    .p-img{background:#fff;padding:16px;text-align:center;}
+    .p-gallery-main{position:relative;}
+    .p-gallery-main img{max-width:100%;max-height:350px;object-fit:contain;}
+    .p-gallery-nav{
+      position:absolute;
+      top:50%;
+      transform:translateY(-50%);
+      width:28px;
+      height:28px;
+      border:none;
+      border-radius:50%;
+      background:rgba(0,0,0,.45);
+      color:#fff;
+      font-size:18px;
+      line-height:1;
+      cursor:pointer;
+    }
+    .p-gallery-nav.prev{left:4px;}
+    .p-gallery-nav.next{right:4px;}
+    .p-gallery-dots{display:flex;justify-content:center;gap:6px;margin-top:10px;}
+    .p-gallery-dots button{
+      width:8px;
+      height:8px;
+      border:none;
+      border-radius:50%;
+      background:#c7c7c7;
+      cursor:pointer;
+      padding:0;
+    }
+    .p-gallery-dots button.on{background:#2874f0;}
+    .p-info{background:#fff;padding:12px;}
+    .p-title{font-size:15px;font-weight:500;line-height:1.4;}
+    .p-rating{display:inline-flex;align-items:center;gap:4px;background:var(--green);color:#fff;font-size:12px;font-weight:700;padding:3px 8px;border-radius:3px;margin:8px 0;}
+    .p-price{font-size:22px;font-weight:700;display:flex;align-items:center;gap:8px;margin:8px 0;}
+    .p-mrp{font-size:14px;color:var(--muted);text-decoration:line-through;}
+    .p-off{font-size:14px;color:var(--green);font-weight:600;}
+    .p-avail{font-size:12px;color:var(--green);margin:6px 0;font-weight:500;}
+    .p-avail.oos{color:#dc3545;}
+    /* Options */
+    .p-section{background:#fff;margin-top:8px;padding:12px;}
+    .p-section h4{font-size:13px;font-weight:600;margin-bottom:8px;}
+    .opt-row{display:flex;gap:8px;flex-wrap:wrap;}
+    .opt-chip{padding:8px 14px;border:1px solid #ddd;border-radius:4px;font-size:13px;cursor:pointer;transition:.2s;}
+    .opt-chip.active{border-color:var(--blue);background:#e8f0fe;color:var(--blue);}
+    .opt-chip.disabled{opacity:.5;cursor:not-allowed;}
+    /* Details */
+    .p-details{font-size:13px;line-height:1.6;}
+    .p-details .l{color:var(--muted);width:110px;display:inline-block;}
+    /* Actions */
+    .p-actions{position:fixed;bottom:0;left:0;right:0;max-width:480px;margin:0 auto;display:flex;gap:8px;padding:12px;background:#fff;box-shadow:0 -2px 8px rgba(0,0,0,.1);}
+    .p-actions button{flex:1;padding:12px;border-radius:4px;font-weight:700;font-size:14px;cursor:pointer;}
+    .btn-cart{border:1px solid var(--blue);background:#fff;color:var(--blue);}
+    .btn-buy{background:var(--yellow);border:none;color:var(--text);}
+    /* Cart drawer */
+    .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;}
+    .drawer{position:fixed;top:0;right:0;width:85%;max-width:340px;height:100%;background:#fff;z-index:201;transform:translateX(100%);transition:.25s;display:flex;flex-direction:column;box-shadow:-2px 0 10px rgba(0,0,0,.15);}
+    .drawer.open{transform:translateX(0);}
+    .drw-head{padding:12px 16px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;font-weight:700;}
+    .drw-head .x{font-size:22px;cursor:pointer;}
+    .drw-body{flex:1;overflow:auto;padding:12px;}
+    .drw-foot{padding:12px;border-top:1px solid #eee;}
+    .drw-total{display:flex;justify-content:space-between;font-weight:700;margin-bottom:8px;}
+    .drw-btn{display:block;text-align:center;padding:12px;background:var(--blue);color:#fff;border-radius:4px;font-weight:700;}
+    .di{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid #f5f5f5;}
+    .di img{width:55px;height:55px;object-fit:cover;border-radius:3px;background:var(--bg);}
+    .di-meta{flex:1;}
+    .di-name{font-size:12px;font-weight:500;}
+    .di-price{font-size:13px;font-weight:700;margin-top:4px;}
+  </style>
+</head>
+<body>
+
+  <header class="fk-header">
+    <a href="javascript:history.back()" class="back">←</a>
+    <a href="home.html" class="logo"><span class="y">Flipkart</span>✕</a>
+    <a href="#" class="cart" onclick="openCart();return false;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      <span class="fk-badge" id="cartBadge">0</span>
+    </a>
+  </header>
+
+  <div id="pImg" class="p-img">
+    <div class="p-gallery-main">
+      <button type="button" class="p-gallery-nav prev" onclick="prevImage()">&#8249;</button>
+      <img id="mainProductImage" src="" alt="">
+      <button type="button" class="p-gallery-nav next" onclick="nextImage()">&#8250;</button>
+    </div>
+    <div id="galleryDots" class="p-gallery-dots"></div>
+  </div>
+  <div class="p-info">
+    <div class="p-title" id="pTitle">Loading...</div>
+    <div class="p-rating" id="pRating">4.2 ★ (0)</div>
+    <div class="p-price">
+      <span id="pPrice">₹0</span>
+      <span class="p-mrp" id="pMrp">₹0</span>
+      <span class="p-off" id="pOff">0% off</span>
+    </div>
+    <div class="p-avail" id="pAvail">In Stock</div>
+  </div>
+
+  <div class="p-section" id="sizeSection">
+    <h4 id="sizeHeading">Select Size</h4>
+    <div class="opt-row" id="sizeOpts"></div>
+  </div>
+
+  <div class="p-section" id="colorSection">
+    <h4>Select Color</h4>
+    <div class="opt-row" id="colorOpts"></div>
+  </div>
+
+  <div class="p-section" id="descSection">
+    <h4>Product Description</h4>
+    <div class="p-details" id="pDesc"></div>
+  </div>
+
+  <div class="p-section" id="specsSection">
+    <h4>Product Details</h4>
+    <div class="p-details" id="pSpecs"></div>
+  </div>
+
+  <!-- Similar Products -->
+  <div class="p-section" id="similarSection">
+    <h4>Similar Products</h4>
+    <div class="opt-row" id="similarList"></div>
+  </div>
+
+  <div style="height:80px"></div>
+
+  <div class="p-actions">
+    <button class="btn-cart" onclick="addToCart(false)">ADD TO CART</button>
+    <button class="btn-buy" onclick="addToCart(true)">BUY NOW</button>
+  </div>
+
+  <!-- Cart Drawer -->
+  <div class="overlay" id="overlay" onclick="closeCart()"></div>
+  <div class="drawer" id="drawer">
+    <div class="drw-head">My Cart <span class="x" onclick="closeCart()">×</span></div>
+    <div class="drw-body" id="drwBody"></div>
+    <div class="drw-foot">
+      <div class="drw-total"><span>Total</span><span id="drwTotal">₹0</span></div>
+      <a href="cart.html" class="drw-btn">VIEW CART</a>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const id = params.get('id');
+    if (!id) location.href = 'home.html';
+
+    let product = null;
+    let selSize = '', selColor = '';
+    let galleryImages = [];
+    let currentImageIndex = 0;
+    let galleryTimer = null;
+
+    function buildGalleryList(p) {
+      const raw = [p && p.image, ...((p && Array.isArray(p.gallery)) ? p.gallery : [])]
+        .map(v => String(v || '').trim())
+        .filter(Boolean);
+      return [...new Set(raw)];
+    }
+
+    function renderGallery() {
+      if (!galleryImages.length) {
+        galleryImages = ['https://placehold.co/400x400/f1f3f6/2874f0?text=No+Image'];
+      }
+      if (currentImageIndex >= galleryImages.length) currentImageIndex = 0;
+      const imgEl = document.getElementById('mainProductImage');
+      imgEl.src = galleryImages[currentImageIndex];
+      imgEl.onerror = function () {
+        imgEl.src = 'https://placehold.co/400x400/f1f3f6/2874f0?text=No+Image';
+      };
+      const dots = document.getElementById('galleryDots');
+      dots.innerHTML = galleryImages.map((_, i) =>
+        `<button type="button" class="${i===currentImageIndex?'on':''}" onclick="goToImage(${i})"></button>`
+      ).join('');
+      const showNav = galleryImages.length > 1;
+      document.querySelector('.p-gallery-nav.prev').style.display = showNav ? 'block' : 'none';
+      document.querySelector('.p-gallery-nav.next').style.display = showNav ? 'block' : 'none';
+    }
+
+    function goToImage(i) {
+      currentImageIndex = i;
+      renderGallery();
+      resetGalleryTimer();
+    }
+
+    function nextImage() {
+      if (galleryImages.length < 2) return;
+      currentImageIndex = (currentImageIndex + 1) % galleryImages.length;
+      renderGallery();
+      resetGalleryTimer();
+    }
+
+    function prevImage() {
+      if (galleryImages.length < 2) return;
+      currentImageIndex = (currentImageIndex - 1 + galleryImages.length) % galleryImages.length;
+      renderGallery();
+      resetGalleryTimer();
+    }
+
+    function resetGalleryTimer() {
+      if (galleryTimer) clearInterval(galleryTimer);
+      if (galleryImages.length > 1) {
+        galleryTimer = setInterval(() => {
+          currentImageIndex = (currentImageIndex + 1) % galleryImages.length;
+          renderGallery();
+        }, 2500);
+      }
+    }
+
+    function render() {
+      if (!product) return;
+      galleryImages = buildGalleryList(product);
+      currentImageIndex = 0;
+      renderGallery();
+      resetGalleryTimer();
+      document.getElementById('pTitle').textContent = product.name || 'Unnamed';
+      document.getElementById('pRating').textContent = (product.rating || 4.2).toFixed(1) + ' ★ (' + (product.ratingCount || 0) + ')';
+      document.getElementById('pPrice').textContent = '₹' + (product.price || 0);
+      document.getElementById('pMrp').textContent = '₹' + (product.mrp || 0);
+      const off = APP.getOffPercent(product.price || 0, product.mrp || 0);
+      document.getElementById('pOff').textContent = off + '% off';
+      
+      const avail = product.availability || 'In Stock';
+      const availEl = document.getElementById('pAvail');
+      availEl.textContent = avail;
+      availEl.classList.toggle('oos', avail !== 'In Stock');
+
+      // Sizes
+      const sizes = product.sizes || [];
+      const sizeSec = document.getElementById('sizeSection');
+      const sizeHeading = document.getElementById('sizeHeading');
+      const sizeLabel = product.variantLabel || (product.productType === 'shoes' ? 'Shoe Size' : 'Size');
+      sizeHeading.textContent = 'Select ' + sizeLabel;
+      if (sizes.length) {
+        sizeSec.style.display = 'block';
+        document.getElementById('sizeOpts').innerHTML = sizes.map(s => `<span class="opt-chip ${s===selSize?'active':''}" data-size="${s}" onclick="selSize='${s}';renderSel()">${s}</span>`).join('');
+        if (!selSize && sizes.length) selSize = sizes[0];
+      } else { sizeSec.style.display = 'none'; }
+
+      // Colors
+      const colors = product.colors || [];
+      const colorSec = document.getElementById('colorSection');
+      if (colors.length) {
+        colorSec.style.display = 'block';
+        document.getElementById('colorOpts').innerHTML = colors.map(c => `<span class="opt-chip ${c===selColor?'active':''}" data-color="${c}" onclick="selColor='${c}';renderSel()">${c}</span>`).join('');
+        if (!selColor && colors.length) selColor = colors[0];
+      } else { colorSec.style.display = 'none'; }
+
+      // Description
+      document.getElementById('pDesc').textContent = product.description || 'No description available.';
+
+      // Specs
+      let specs = '';
+      if (product.productType) {
+        const cat = String(product.productType);
+        specs += `<div><span class="l">Category:</span>${cat.charAt(0).toUpperCase() + cat.slice(1)}</div>`;
+      }
+      if (product.material) specs += `<div><span class="l">Material:</span>${product.material}</div>`;
+      if (product.careInstructions) specs += `<div><span class="l">Care:</span>${product.careInstructions}</div>`;
+      if (product.brand) specs += `<div><span class="l">Brand:</span>${product.brand}</div>`;
+      if (product.model) specs += `<div><span class="l">Model:</span>${product.model}</div>`;
+      if (product.warranty) specs += `<div><span class="l">Warranty:</span>${product.warranty}</div>`;
+      if (product.colors && product.colors.length) specs += `<div><span class="l">Colors:</span>${product.colors.join(', ')}</div>`;
+      if (product.sizes && product.sizes.length) specs += `<div><span class="l">${sizeLabel}:</span>${product.sizes.join(', ')}</div>`;
+      document.getElementById('pSpecs').innerHTML = specs || '<div><span class="l">Details:</span>Standard</div>';
+    }
+
+    function renderSel() {
+      document.querySelectorAll('#sizeOpts .opt-chip').forEach(el => el.classList.toggle('active', el.dataset.size === selSize));
+      document.querySelectorAll('#colorOpts .opt-chip').forEach(el => el.classList.toggle('active', el.dataset.color === selColor));
+    }
+
+    function openCart(){ document.getElementById('drawer').classList.add('open'); document.getElementById('overlay').style.display='block'; }
+    function closeCart(){ document.getElementById('drawer').classList.remove('open'); document.getElementById('overlay').style.display='none'; }
+
+    function updateCartUI(){
+      const items=JSON.parse(localStorage.getItem('products')||'[]');
+      document.getElementById('cartBadge').style.display = items.length ? 'flex' : 'none';
+      document.getElementById('cartBadge').textContent = items.length;
+      let total=0;
+      const body=document.getElementById('drwBody');
+      if(!items.length){body.innerHTML='<div style="text-align:center;padding:40px;color:#878787">Cart is empty</div>';document.getElementById('drwTotal').textContent='₹0';return;}
+      body.innerHTML=items.map(p=>{total+=p.price*(p.qty||1);return`<div class="di"><img src="${p.product_img}" alt=""><div class="di-meta"><div class="di-name">${p.product_title}</div><div class="di-price">₹${p.price} × ${p.qty||1}</div></div></div>`;}).join('');
+      document.getElementById('drwTotal').textContent='₹'+total.toFixed(2);
+    }
+
+    function addToCart(buyNow){
+      let items=JSON.parse(localStorage.getItem('products')||'[]');
+      const variantLabel = product.variantLabel || (product.productType === 'shoes' ? 'Shoe Size' : (product.sizes && product.sizes.length ? 'Size' : ''));
+      const variantValue = selSize || '';
+      const item={
+        index:items.length,product_id:product.id,product_title:product.name,product_img:product.image,
+        price:product.price,mrp:product.mrp,size:variantValue||'N/A',color:selColor||'One Color',qty:1,
+        variantLabel,variantValue
+      };
+      const exists=items.find(p=>p.product_id===product.id&&p.size===item.size);
+      if(exists)exists.qty++;
+      else items.push(item);
+      items.forEach((p,i)=>p.index=i);
+      localStorage.setItem('products',JSON.stringify(items));
+      localStorage.setItem('cartTotalAmount',items.reduce((s,p)=>s+p.price*p.qty,0).toFixed(2));
+      if(buyNow)location.href='checkout.html';
+      else{updateCartUI();openCart();}
+    }
+
+    (async function init(){
+      await APP.initBackend();
+      product = await APP.getProductByIdAsync(id);
+      if(!product)product = APP.getProductById(id);
+      if(!product)product = {id,name:'Product Not Found',price:0,mrp:0,image:'',sizes:[],colors:[],availability:'Out of Stock'};
+      selSize = (product.sizes && product.sizes[0]) || '';
+      selColor = (product.colors && product.colors[0]) || '';
+      render();
+      updateCartUI();
+      renderSimilar();
+    })();
+
+    async function renderSimilar() {
+      const all = await APP.getProductsAsync();
+      const others = all.filter(p => p.id !== product.id).slice(0, 4);
+      const sec = document.getElementById('similarSection');
+      if (!others.length) { sec.style.display = 'none'; return; }
+      sec.style.display = 'block';
+      document.getElementById('similarList').innerHTML = others.map(p => `
+        <a href="product2.html?id=${p.id}" style="text-decoration:none;color:inherit">
+          <div style="width:100px;text-align:center;padding:8px;border:1px solid #eee;border-radius:4px;">
+            <img src="${p.image || 'https://placehold.co/80x80/f1f3f6/2874f0?text=?'}" style="width:80px;height:80px;object-fit:contain;border-radius:4px;">
+            <div style="font-size:11px;font-weight:600;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name || 'Product'}</div>
+            <div style="font-size:12px;font-weight:700;color:#2874f0">₹${p.price || 0}</div>
+          </div>
+        </a>
+      `).join('');
+    }
+  </script>
+</body>
+</html>

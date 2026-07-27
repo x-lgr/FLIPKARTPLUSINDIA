@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#2874f0">
+  <title>Scan To Pay</title>
+  <link rel="stylesheet" href="css/flipkart.css">
+  <style>
+    body { background: #e9eaec; }
+    .brand { background: #1f6fe5; padding: 10px 16px; }
+    .brand img { height: 42px; width: auto; }
+    .wrap { max-width: 560px; margin: 16px auto; padding: 0 12px; }
+    .panel { background: #fff; border: 1px solid #d6d6d6; border-radius: 8px; padding: 18px; text-align: center; }
+    .offer { font-size: 18px; font-weight: 700; margin: 4px 0 14px; }
+    .offer span { color: #f15a24; }
+    .qr { width: 300px; height: 300px; max-width: 100%; border: 2px solid #111; display: block; margin: 0 auto; }
+    .note { margin-top: 14px; color: #e50000; font-size: 14px; font-weight: 700; }
+    .upi { margin-top: 8px; font-size: 13px; color: #555; word-break: break-all; }
+    .utr { margin-top: 14px; text-align: left; }
+    .utr label { display: block; font-weight: 600; margin-bottom: 6px; }
+    .utr input { width: 100%; border: 1px solid #dadada; border-radius: 6px; padding: 11px; font-size: 14px; }
+    .btn { width: 100%; margin-top: 14px; border: none; border-radius: 8px; background: #ff671d; color: #fff; font-size: 16px; padding: 14px 16px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <header class="fk-header">
+    <a href="payment.html" class="fk-back">&#8592;</a>
+    <span style="font-weight:600">Payment</span>
+    <span style="width:24px"></span>
+  </header>
+
+  <div class="brand">
+    <img src="flipkart.webp" alt="Flipkart Plus">
+  </div>
+
+  <div class="wrap">
+    <div class="panel">
+      <div class="offer">Offer ends in <span id="timer">10min 00sec</span></div>
+      <img id="qrImg" class="qr" src="" alt="QR">
+      <div class="note">Scan above QR to pay <span id="payAmt">Rs0</span></div>
+      <div class="upi" id="upiText"></div>
+      <div class="utr">
+        <label for="utrNumber">UTR Number</label>
+        <input id="utrNumber" type="text" placeholder="Enter UTR and click Complete Payment" maxlength="30">
+      </div>
+      <button class="btn" onclick="completePayment()">Complete Payment</button>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script>
+    const total = parseFloat(localStorage.getItem('cartTotalAmount') || '0');
+    document.getElementById('payAmt').textContent = '\u20B9' + total.toFixed(0);
+
+    async function buildQR() {
+      await APP.initBackend();
+      const upi = await APP.getUpiAsync();
+      const upiId = upi.upiId || '';
+      const name = encodeURIComponent(upi.name || 'Store');
+      const note = encodeURIComponent(upi.note || 'Order Payment');
+      const amt = total.toFixed(2);
+
+      if (!upiId) {
+        document.getElementById('upiText').textContent = 'UPI not set in admin panel.';
+        return;
+      }
+
+      const upiStr = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${name}&am=${amt}&tn=${note}&cu=INR`;
+      const qrImg = document.getElementById('qrImg');
+      const primaryQR = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(upiStr);
+      const fallbackQR = 'https://quickchart.io/qr?size=300&text=' + encodeURIComponent(upiStr);
+      qrImg.dataset.fallback = '0';
+      qrImg.onerror = function () {
+        if (qrImg.dataset.fallback === '0') {
+          qrImg.dataset.fallback = '1';
+          qrImg.src = fallbackQR;
+        } else {
+          document.getElementById('upiText').textContent = 'UPI: ' + upiId + ' (QR unavailable)';
+        }
+      };
+      qrImg.src = primaryQR;
+      document.getElementById('upiText').textContent = 'UPI: ' + upiId;
+    }
+
+    function completePayment() {
+      const utr = document.getElementById('utrNumber').value.trim();
+      if (!utr) {
+        alert('Please enter UTR number.');
+        return;
+      }
+      localStorage.setItem('submittedUTR', utr);
+      localStorage.removeItem('products');
+      localStorage.setItem('cartTotalAmount', '0');
+      alert('Payment completed.');
+      window.location.href = 'home.html';
+    }
+
+    let secondsLeft = 600;
+    setInterval(() => {
+      const mins = String(Math.floor(secondsLeft / 60)).padStart(2, '0');
+      const secs = String(secondsLeft % 60).padStart(2, '0');
+      document.getElementById('timer').textContent = `${mins}min ${secs}sec`;
+      if (secondsLeft > 0) secondsLeft -= 1;
+    }, 1000);
+
+    buildQR();
+  </script>
+</body>
+</html>

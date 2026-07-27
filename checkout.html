@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#2874f0">
+  <title>Checkout - Address</title>
+  <link rel="stylesheet" href="css/flipkart.css">
+  <style>
+    .checkout-form { padding: 16px; max-width: 560px; margin: 0 auto; }
+    .checkout-form label { display: block; font-weight: 500; margin-bottom: 4px; font-size: 13px; }
+    .checkout-form input, .checkout-form textarea { width: 100%; padding: 10px 12px; border: 1px solid #e0e0e0; border-radius: 4px; margin-bottom: 12px; font-size: 14px; }
+    .checkout-form .btn { width: 100%; padding: 12px; background: #ffe500; color: #212121; border: none; font-weight: 600; font-size: 14px; border-radius: 4px; cursor: pointer; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <header class="fk-header">
+    <a href="javascript:history.back()" class="fk-back" aria-label="Back">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    </a>
+    <span style="font-weight:600">Address</span>
+    <span style="width:24px"></span>
+  </header>
+
+  <div class="fk-stepper">
+    <div class="step active"><span class="num">1</span> Address</div>
+    <div class="step"><span class="num">2</span> Order Summary</div>
+    <div class="step"><span class="num">3</span> Payment</div>
+  </div>
+
+  <div class="checkout-form">
+    <label>Full Name</label>
+    <input type="text" id="name" placeholder="Enter name">
+    <label>Mobile</label>
+    <input type="tel" id="mobile" placeholder="10-digit mobile">
+    <label>Address</label>
+    <textarea id="address" rows="3" placeholder="House no, building, area"></textarea>
+    <label>City</label>
+    <input type="text" id="city" placeholder="City">
+    <label>Pincode</label>
+    <input type="text" id="pincode" placeholder="Pincode">
+    <button type="button" class="btn" onclick="saveAddress()">CONTINUE</button>
+  </div>
+
+  <script>
+    function saveAddress() {
+      const name = document.getElementById('name').value.trim();
+      const mobile = document.getElementById('mobile').value.trim();
+      const address = document.getElementById('address').value.trim();
+      const city = document.getElementById('city').value.trim();
+      const pincode = document.getElementById('pincode').value.trim();
+
+      if (!name || !mobile || !address) {
+        alert('Please fill Name, Mobile and Address.');
+        return;
+      }
+
+      localStorage.setItem('address', JSON.stringify({ name, mobile, address, city, pincode }));
+      window.location.href = 'order-summary.html';
+    }
+  </script>
+</body>
+</html>
