@@ -1,55 +1,9 @@
 const APP = {
-  _db: null,
-  _initPromise: null,
+  _dataPromise: null,
 
+  // Kept as a no-op for backward compatibility with admin.html calls.
   async initBackend() {
-    if (this._db) return this._db;
-    if (this._initPromise) return this._initPromise;
-
-    this._initPromise = (async () => {
-      await this._loadFirebaseSdk();
-      const config = await this._loadFirebaseConfig();
-
-      if (!window.firebase.apps.length) {
-        window.firebase.initializeApp(config);
-      }
-
-      this._db = window.firebase.firestore();
-      this._db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
-      return this._db;
-    })();
-
-    return this._initPromise;
-  },
-
-  async _loadFirebaseConfig() {
-    const res = await fetch("/api/firebase-config", { cache: "no-store" });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok || !data.config || !data.config.apiKey || !data.config.projectId) {
-      throw new Error("Firebase config missing from backend env.");
-    }
-    return data.config;
-  },
-
-  _loadScript(src) {
-    return new Promise((resolve, reject) => {
-      if (document.querySelector(`script[src="${src}"]`)) {
-        resolve();
-        return;
-      }
-      const script = document.createElement("script");
-      script.src = src;
-      script.async = true;
-      script.onload = resolve;
-      script.onerror = () => reject(new Error(`Failed to load ${src}`));
-      document.head.appendChild(script);
-    });
-  },
-
-  async _loadFirebaseSdk() {
-    if (window.firebase && window.firebase.firestore) return;
-    await this._loadScript("https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js");
-    await this._loadScript("https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js");
+    return null;
   },
 
   _local(key) {
@@ -65,36 +19,58 @@ const APP = {
     localStorage.setItem("fk_" + key, JSON.stringify(value));
   },
 
-  async _get(key) {
-    try {
-      const db = await this.initBackend();
-      const doc = await db.collection("store").doc(key).get();
-      if (doc.exists) {
-        const value = doc.data().value;
-        this._cache(key, value);
-        return value;
+  async _fetchCachedData() {
+    if (this._dataPromise) return this._dataPromise;
+    this._dataPromise = (async () => {
+      try {
+        const res = await fetch("/api/data");
+        const json = await res.json().catch(() => null);
+        if (json && json.ok && json.data) {
+          this._cache("products", json.data.products || []);
+          this._cache("upi", json.data.upi || {});
+          this._cache("banners", json.data.banners || []);
+          return json.data;
+        }
+      } catch (e) {
+        console.error("Cached data fetch error:", e);
       }
-    } catch (e) {
-      console.error("Firebase get error:", e);
-    }
-    return this._local(key);
+      return null;
+    })();
+    return this._dataPromise;
   },
 
-  async _set(key, value) {
-    this._cache(key, value);
+  _getAdminToken() {
+    let token = sessionStorage.getItem("fk_admin_token");
+    if (!token) {
+      token = window.prompt("Enter admin token:") || "";
+      if (token) sessionStorage.setItem("fk_admin_token", token);
+    }
+    return token;
+  },
+
+  async _adminPost(action, value) {
+    const token = this._getAdminToken();
     try {
-      const db = await this.initBackend();
-      await db.collection("store").doc(key).set({ value, updatedAt: Date.now() });
-      return { localSaved: true, remoteSaved: true };
+      const res = await fetch("/api/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-admin-token": token },
+        body: JSON.stringify({ action, value })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 401) {
+        sessionStorage.removeItem("fk_admin_token");
+        return { localSaved: true, remoteSaved: false, reason: "Invalid admin token" };
+      }
+      return { localSaved: true, remoteSaved: !!(data && data.ok) };
     } catch (e) {
-      console.error("Firebase save error:", e);
       return { localSaved: true, remoteSaved: false, reason: e && e.message ? e.message : String(e) };
     }
   },
 
   async getProductsAsync() {
-    const products = await this._get("products");
-    return Array.isArray(products) ? products : [];
+    const data = await this._fetchCachedData();
+    if (data) return Array.isArray(data.products) ? data.products : [];
+    return this._local("products") || [];
   },
 
   getProducts() {
@@ -102,12 +78,15 @@ const APP = {
   },
 
   async saveProducts(products) {
-    return this._set("products", products || []);
+    const list = products || [];
+    this._cache("products", list);
+    return this._adminPost("products", list);
   },
 
   async getUpiAsync() {
-    const upi = await this._get("upi");
-    return upi || { upiId: "", name: "Store", note: "Order Payment" };
+    const data = await this._fetchCachedData();
+    if (data) return data.upi || { upiId: "", name: "Store", note: "Order Payment" };
+    return this._local("upi") || { upiId: "", name: "Store", note: "Order Payment" };
   },
 
   getUpi() {
@@ -115,26 +94,15 @@ const APP = {
   },
 
   async saveUpi(config) {
-    return this._set("upi", config || {});
+    const value = config || {};
+    this._cache("upi", value);
+    return this._adminPost("upi", value);
   },
 
   async getBannersAsync() {
-    try {
-      const db = await this.initBackend();
-      const snap = await db.collection("store_banners").orderBy("idx").get();
-      if (!snap.empty) {
-        const list = snap.docs
-          .map(doc => doc.data().value)
-          .filter(value => typeof value === "string" && value.trim());
-        this._cache("banners", list);
-        return list;
-      }
-    } catch (e) {
-      console.error("Firebase banners get error:", e);
-    }
-
-    const banners = await this._get("banners");
-    return Array.isArray(banners) ? banners : [];
+    const data = await this._fetchCachedData();
+    if (data && Array.isArray(data.banners)) return data.banners;
+    return this._local("banners") || [];
   },
 
   getBanners() {
@@ -144,27 +112,8 @@ const APP = {
   async saveBanners(banners) {
     const list = (banners || []).filter(value => typeof value === "string" && value.trim());
     this._cache("banners", list);
-
-    try {
-      const db = await this.initBackend();
-      const col = db.collection("store_banners");
-      const old = await col.get();
-      const batch = db.batch();
-      old.forEach(doc => batch.delete(doc.ref));
-      list.forEach((value, idx) => {
-        batch.set(col.doc("b_" + String(idx).padStart(3, "0")), {
-          idx,
-          value,
-          updatedAt: Date.now()
-        });
-      });
-      await batch.commit();
-      await db.collection("store").doc("banners").delete().catch(() => {});
-      return { localSaved: true, remoteSaved: true, count: list.length };
-    } catch (e) {
-      console.error("Firebase banners save error:", e);
-      return { localSaved: true, remoteSaved: false, reason: e && e.message ? e.message : String(e) };
-    }
+    const res = await this._adminPost("banners", list);
+    return { ...res, count: list.length };
   },
 
   async _fetchPublicIp() {
@@ -188,47 +137,30 @@ const APP = {
     }
 
     try {
-      const db = await this.initBackend();
-      const payload = {
-        ip: await this._fetchPublicIp(),
-        ua: navigator.userAgent || "",
-        path: location.pathname || "",
-        ts: Date.now()
-      };
-      await db.collection("store_visits").add(payload);
+      const ip = await this._fetchPublicIp();
+      await fetch("/api/visits", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ip, ua: navigator.userAgent || "", path: location.pathname || "" })
+      });
       sessionStorage.setItem(sessionKey, "1");
-      return { saved: true, ip: payload.ip };
+      return { saved: true, ip };
     } catch (e) {
       return { saved: false, reason: e && e.message ? e.message : String(e) };
     }
   },
 
-  async getVisitStats(limitCount = 5000) {
+  async getVisitStats() {
     try {
-      const db = await this.initBackend();
-      const snap = await db.collection("store_visits").orderBy("ts", "desc").limit(limitCount).get();
-      const ipCount = {};
-      snap.forEach(doc => {
-        const data = doc.data() || {};
-        const ip = data.ip && String(data.ip).trim() ? String(data.ip).trim() : "unknown";
-        ipCount[ip] = (ipCount[ip] || 0) + 1;
-      });
-      const ips = Object.keys(ipCount);
-      const total = snap.size;
-      const topIps = ips
-        .sort((a, b) => ipCount[b] - ipCount[a])
-        .slice(0, 8)
-        .map(ip => ({ ip, count: ipCount[ip] }));
-      return {
-        total,
-        uniqueIps: ips.length,
-        repeatVisits: Math.max(total - ips.length, 0),
-        topIps
-      };
+      const token = this._getAdminToken();
+      const res = await fetch("/api/visits", { headers: { "x-admin-token": token } });
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 401) sessionStorage.removeItem("fk_admin_token");
+      if (data && data.ok && data.stats) return data.stats;
     } catch (e) {
       console.error("Visit stats error:", e);
-      return { total: 0, uniqueIps: 0, repeatVisits: 0, topIps: [] };
     }
+    return { total: 0, uniqueIps: 0, repeatVisits: 0, topIps: [] };
   },
 
   getProductById(id) {

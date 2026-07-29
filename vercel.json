@@ -1,5 +1,19 @@
 {
   "version": 2,
-  "cleanUrls": true,
-  "trailingSlash": false
+  "builds": [
+    { "src": "api/data.py", "use": "@vercel/python" },
+    { "src": "api/save.py", "use": "@vercel/python" },
+    { "src": "api/visits.py", "use": "@vercel/python" },
+    { "src": "*.html", "use": "@vercel/static" },
+    { "src": "*.png", "use": "@vercel/static" },
+    { "src": "*.webp", "use": "@vercel/static" },
+    { "src": "css/**", "use": "@vercel/static" },
+    { "src": "js/**", "use": "@vercel/static" }
+  ],
+  "routes": [
+    { "src": "/api/data", "dest": "/api/data.py" },
+    { "src": "/api/save", "dest": "/api/save.py" },
+    { "src": "/api/visits", "dest": "/api/visits.py" },
+    { "src": "/(.*)", "dest": "/$1" }
+  ]
 }

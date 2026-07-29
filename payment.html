@@ -39,18 +39,19 @@
 
   <div class="pay-wrap">
     <div class="card">
+      <!-- PhonePe -->
       <div class="option active" data-method="phonepe" onclick="handleOptionClick(this)">
         <img src="https://upload.wikimedia.org/wikipedia/commons/7/71/PhonePe_Logo.svg" alt="PhonePe">
         <span class="label">PhonePe</span>
       </div>
+
+      <!-- Paytm -->
       <div class="option" data-method="paytm" onclick="handleOptionClick(this)">
         <img src="https://upload.wikimedia.org/wikipedia/commons/2/24/Paytm_Logo_%28standalone%29.svg" alt="Paytm">
         <span class="label">Paytm</span>
       </div>
-      <div class="option" data-method="upi" onclick="handleOptionClick(this)">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/e/e1/UPI-Logo-vector.svg" alt="UPI">
-        <span class="label">UPI App</span>
-      </div>
+
+      <!-- Scan to Pay -->
       <div class="option" data-method="scan" onclick="selectMethod(this)">
         <img src="scan.png" alt="Scan to Pay" onerror="this.style.display='none'">
         <span class="label">SCAN TO PAY</span>
@@ -89,14 +90,41 @@
     function buildDeepLink(method) {
       const upiId = (upiPayload.upiId || '').trim();
       if (!upiId) return '';
-      const amount = Number(price || 0).toFixed(2);
-      const pa = encodeURIComponent(upiId);
-      const pn = encodeURIComponent(upiPayload.name || 'Store');
-      const tn = encodeURIComponent(upiPayload.note || 'Order Payment');
-      const commonParams = `pa=${pa}&pn=${pn}&am=${amount}&cu=INR&tn=${tn}`;
-      if (method === 'phonepe') return `phonepe://pay?${commonParams}`;
-      if (method === 'paytm') return `paytmmp://pay?${commonParams}`;
-      return `upi://pay?${commonParams}`;
+      
+      const amountInRupees = Number(price || 0);
+      const note = upiPayload.note || 'Order Payment';
+      const name = upiPayload.name || 'Store';
+
+      if (method === 'phonepe') {
+        // PhonePe native JSON structure (amount in paise)
+        const amountInPaise = Math.round(amountInRupees * 100);
+        const jsonData = {
+          contact: {
+            cbcName: "",
+            nickName: "",
+            vpa: upiId,
+            type: "VPA"
+          },
+          p2pPaymentCheckoutParams: {
+            note: note,
+            isByDefaultKnownContact: true,
+            initialAmount: amountInPaise,
+            currency: "INR",
+            checkoutType: "DEFAULT",
+            transactionContext: "p2p"
+          }
+        };
+        const base64Data = btoa(JSON.stringify(jsonData));
+        return `phonepe://native?data=${base64Data}&id=p2ppayment`;
+      }
+
+      if (method === 'paytm') {
+        // Paytm cash wallet structure
+        return `paytmmp://cash_wallet?pa=${upiId}&pn=${name}&mc=&tr=&am=${amountInRupees}&cu=INR&tn=${note}&url=&mode=02&purpose=00&orgid=&sign=&featuretype=money_transfer`;
+      }
+
+      // Fallback (though UPI button is removed)
+      return `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(name)}&am=${amountInRupees}&cu=INR&tn=${encodeURIComponent(note)}`;
     }
 
     function handleOptionClick(el) {
