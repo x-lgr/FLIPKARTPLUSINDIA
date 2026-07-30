@@ -1,6 +1,6 @@
 import json
 from http.server import BaseHTTPRequestHandler
-from api._firestore import get_access_token, get_doc, list_docs, decode_doc
+from _firestore import get_access_token, get_doc, list_docs, decode_doc
 
 
 class handler(BaseHTTPRequestHandler):
