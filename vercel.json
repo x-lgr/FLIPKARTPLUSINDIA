@@ -1,9 +1,9 @@
 {
   "version": 2,
   "builds": [
-    { "src": "api/data.py", "use": "@vercel/python" },
-    { "src": "api/save.py", "use": "@vercel/python" },
-    { "src": "api/visits.py", "use": "@vercel/python" },
+    { "src": "api/data.py", "use": "@vercel/python", "config": { "includeFiles": "api/_firestore.py" } },
+    { "src": "api/save.py", "use": "@vercel/python", "config": { "includeFiles": "api/_firestore.py" } },
+    { "src": "api/visits.py", "use": "@vercel/python", "config": { "includeFiles": "api/_firestore.py" } },
     { "src": "*.html", "use": "@vercel/static" },
     { "src": "*.png", "use": "@vercel/static" },
     { "src": "*.webp", "use": "@vercel/static" },
