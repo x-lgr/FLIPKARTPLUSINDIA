@@ -1,9 +1,10 @@
 import json
 import os
+import sys
 import time
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from http.server import BaseHTTPRequestHandler
 from _firestore import get_access_token, add_doc, list_docs, decode_doc, encode_value
-
 
 class handler(BaseHTTPRequestHandler):
     def _send(self, status, payload):
